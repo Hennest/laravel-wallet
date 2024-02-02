@@ -1,0 +1,64 @@
+{
+    "name": "hennest/laravel-wallet",
+    "description": "Laravel wallet provider for laravel apps",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "role": "Developer",
+            "name": "hennest",
+            "email": "ernestuwadiegwu@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Hennest\\Wallet\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Hennest\\Wallet\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "guzzlehttp/guzzle": "^7.8"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.13",
+        "orchestra/testbench": "^8.14",
+        "pestphp/pest": "^2.24",
+        "phpstan/phpstan": "^1.10"
+    },
+    "scripts": {
+        "stan": [
+            "./vendor/bin/phpstan analyse"
+        ],
+        "pest": [
+            "./vendor/bin/pest"
+        ],
+        "pint": [
+            "./vendor/bin/pint"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Hennest\\Wallet\\Providers\\ExchangeRateServiceProvider"
+            ],
+            "aliases": [
+                "Hennest\\Wallet\\Facades\\Wallet"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
