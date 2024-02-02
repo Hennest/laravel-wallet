@@ -13,7 +13,7 @@ return new class extends Migration {
             $table->ulid('id');
 
             $table->morphs('payable');
-            $table->unsignedBigInteger('wallet_id');
+            $table->foreignUlid('wallet_id')->constrained()->cascadeOnDelete();
             $table->string('type')->index();
             $table->string('amount', 64);
             $table->boolean('confirmed');

@@ -10,7 +10,7 @@ final class WalletServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->loadMigrationsFrom([dirname(__DIR__) . '/Database/Migrations']);
+        $this->loadMigrationsFrom([dirname(__DIR__) . '/../database/migrations']);
     }
 
     public function boot(): void
