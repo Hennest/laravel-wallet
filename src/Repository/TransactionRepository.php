@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Modules\Wallet\Repository;
+namespace Hennest\Wallet\Repository;
 
-use Modules\Wallet\DTOs\TransactionDto;
-use Modules\Wallet\Models\Transaction;
+use Hennest\Wallet\DTOs\TransactionDto;
+use Hennest\Wallet\Models\Transaction;
 
 final readonly class TransactionRepository
 {

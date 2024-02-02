@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Modules\Wallet\Enums;
+namespace Hennest\Wallet\Enums;
 
 enum TransactionType: string
 {

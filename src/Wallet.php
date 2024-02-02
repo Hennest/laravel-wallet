@@ -2,21 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Modules\Wallet;
+namespace Hennest\Wallet;
 
 use Brick\Math\Exception\MathException;
-use Modules\Money\Money;
-use Modules\Wallet\DTOs\TransactionDto;
-use Modules\Wallet\Enums\TransactionType;
-use Modules\Wallet\Exceptions\AmountInvalid;
-use Modules\Wallet\Services\TransactionService;
+use Hennest\Money\Money;
+use Hennest\Wallet\DTOs\TransactionDto;
+use Hennest\Wallet\Enums\TransactionType;
+use Hennest\Wallet\Exceptions\AmountInvalid;
+use Hennest\Wallet\Interfaces\WalletInterface;
+use Hennest\Wallet\Services\TransactionService;
 
 final readonly class Wallet
 {
     public function __construct(
-        public Models\Wallet $wallet,
-        public string $name,
-        public string $type,
+        public WalletInterface $wallet,
     ) {
     }
 

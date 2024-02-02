@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Modules\Wallet\DTOs;
+namespace Hennest\Wallet\DTOs;
 
+use Hennest\Money\Money;
+use Hennest\Wallet\Enums\TransactionType;
 use Illuminate\Contracts\Support\Arrayable;
-use Modules\Wallet\Enums\TransactionType;
 
 final readonly class TransactionDto implements Arrayable
 {
@@ -15,7 +16,7 @@ final readonly class TransactionDto implements Arrayable
         private int|string $walletId,
         private int|string $payableId,
         private string $payableType,
-        private int $amount,
+        private Money $amount,
         private bool $confirmed,
         private array|null $meta
     ) {
@@ -36,7 +37,7 @@ final readonly class TransactionDto implements Arrayable
         return $this->payableId;
     }
 
-    public function getWalletId(): int
+    public function getWalletId(): int|string
     {
         return $this->walletId;
     }
@@ -46,7 +47,7 @@ final readonly class TransactionDto implements Arrayable
         return $this->type;
     }
 
-    public function getAmount(): int
+    public function getAmount(): Money
     {
         return $this->amount;
     }
@@ -64,7 +65,14 @@ final readonly class TransactionDto implements Arrayable
     public function toArray(): array
     {
         return [
-            '',
+            'id' => $this->key,
+            'type' => $this->type,
+            'wallet_id' => $this->walletId,
+            'payable_id' => $this->payableId,
+            'payable_type' => $this->payableType,
+            'amount' => $this->amount,
+            'confirmed' => $this->confirmed,
+            'meta' => $this->meta,
         ];
     }
 }

@@ -22,7 +22,9 @@
     },
     "require": {
         "php": "^8.2",
-        "guzzlehttp/guzzle": "^7.8"
+        "guzzlehttp/guzzle": "^7.8",
+        "hennest/laravel-math": "dev-main",
+        "hennest/laravel-money": "dev-main"
     },
     "require-dev": {
         "laravel/pint": "^1.13",
@@ -60,5 +62,15 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true
         }
-    }
+    },
+    "repositories": [
+        {
+            "url": "https://github.com/Hennest/laravel-math",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/Hennest/laravel-money",
+            "type": "git"
+        }
+    ]
 }

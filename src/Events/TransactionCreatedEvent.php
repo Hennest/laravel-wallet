@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Modules\Wallet\Events;
+namespace Hennest\Wallet\Events;
 
-use Modules\Wallet\Enums\TransactionType;
+use Hennest\Wallet\Enums\TransactionType;
 
 final readonly class TransactionCreatedEvent
 {
     public function __construct(
-        private int $id,
+        private int|string $id,
         private TransactionType $type,
-        private int $walletId,
+        private int|string $walletId,
     ) {
     }
 
-    public function getId(): int
+    public function getId(): int|string
     {
         return $this->id;
     }
@@ -25,7 +25,7 @@ final readonly class TransactionCreatedEvent
         return $this->type;
     }
 
-    public function getWalletId(): int
+    public function getWalletId(): int|string
     {
         return $this->walletId;
     }

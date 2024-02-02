@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Modules\Wallet\DTOs;
+namespace Hennest\Wallet\DTOs;
 
 final class OwnerDto
 {

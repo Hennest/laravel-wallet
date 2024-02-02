@@ -2,14 +2,33 @@
 
 declare(strict_types=1);
 
-namespace Modules\Wallet\Models;
+namespace Hennest\Wallet\Models;
 
+use Hennest\Money\Casts\MoneyCast;
+use Hennest\Wallet\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 final class Transaction extends Model
 {
-    use HasFactory;
     use HasUlids;
+
+    protected $fillable = [
+        'id',
+        'type',
+        'wallet_id',
+        'payable_id',
+        'payable_type',
+        'amount',
+        'confirmed',
+        'meta',
+    ];
+
+    protected $casts = [
+        'confirmed' => 'bool',
+        'meta' => 'array',
+        'wallet_id' => 'string',
+        'amount' => MoneyCast::class,
+        'type' => TransactionType::class,
+    ];
 }

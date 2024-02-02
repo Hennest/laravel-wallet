@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Modules\Wallet\Services;
+namespace Hennest\Wallet\Services;
 
 use Brick\Math\Exception\MathException;
-use Modules\Money\Money;
-use Modules\Wallet\DTOs\TransactionDto;
-use Modules\Wallet\Enums\TransactionType;
-use Modules\Wallet\Events\TransactionCreatedEvent;
-use Modules\Wallet\Exceptions\AmountInvalid;
-use Modules\Wallet\Models\Wallet;
-use Modules\Wallet\Repository\TransactionRepository;
+use Hennest\Money\Money;
+use Hennest\Wallet\DTOs\TransactionDto;
+use Hennest\Wallet\Enums\TransactionType;
+use Hennest\Wallet\Events\TransactionCreatedEvent;
+use Hennest\Wallet\Exceptions\AmountInvalid;
+use Hennest\Wallet\Interfaces\WalletInterface;
+use Hennest\Wallet\Repository\TransactionRepository;
 
 final readonly class TransactionService
 {
@@ -26,7 +26,7 @@ final readonly class TransactionService
      * @throws AmountInvalid
      */
     public function create(
-        Wallet $wallet,
+        WalletInterface $wallet,
         TransactionType $type,
         Money $amount,
         bool $confirmed = true,
@@ -38,9 +38,9 @@ final readonly class TransactionService
             key: $wallet->getKey(),
             type: $type,
             walletId: $wallet->getKey(),
-            payableId: $wallet->owner->getKey(),
-            payableType: $wallet->owner->getMorphClass(),
-            amount: $amount->format()->asMinorUnit(),
+            payableId: $wallet->holder->getKey(),
+            payableType: $wallet->holder->getMorphClass(),
+            amount: $amount,
             confirmed: $confirmed,
             meta: $meta,
         );
@@ -53,18 +53,18 @@ final readonly class TransactionService
     }
 
     /**
-     * @param array<int|string, TransactionDto> $objects
+     * @param array<int|string, TransactionDto> $transactionDtos
      * @return array<int|string, TransactionDto>
      */
-    public function apply(array $objects): array
+    public function apply(array $transactionDtos): array
     {
-        if (1 === count($objects)) {
-            $this->transactionRepository->insertOne(reset($objects));
+        if (1 === count($transactionDtos)) {
+            $this->transactionRepository->insertOne(reset($transactionDtos));
         } else {
-            $this->transactionRepository->insert($objects);
+            $this->transactionRepository->insert($transactionDtos);
         }
 
-        foreach ($objects as $object) {
+        foreach ($transactionDtos as $object) {
             event(new TransactionCreatedEvent(
                 id: $object->getKey(),
                 type: $object->getType(),
@@ -72,6 +72,6 @@ final readonly class TransactionService
             ));
         }
 
-        return $objects;
+        return $transactionDtos;
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Modules\Wallet\Services;
+namespace Hennest\Wallet\Services;
 
 final class WalletService
 {

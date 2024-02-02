@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Modules\Wallet\Services;
+namespace Hennest\Wallet\Services;
 
 use Brick\Math\Exception\MathException;
-use Modules\Math\Contracts\MathServiceInterface;
-use Modules\Money\Money;
-use Modules\Wallet\Exceptions\AmountInvalid;
-use Modules\Wallet\Exceptions\BalanceIsEmpty;
-use Modules\Wallet\Exceptions\InsufficientFund;
-use Modules\Wallet\Models\Wallet;
+use Hennest\Math\Contracts\MathServiceInterface;
+use Hennest\Money\Money;
+use Hennest\Wallet\Exceptions\AmountInvalid;
+use Hennest\Wallet\Exceptions\BalanceIsEmpty;
+use Hennest\Wallet\Exceptions\InsufficientFund;
+use Hennest\Wallet\Models\Wallet;
 
 final class ConsistencyService
 {
@@ -25,7 +25,7 @@ final class ConsistencyService
      */
     public function checkPositive(Money $amount): void
     {
-        if (MathServiceInterface::LESS_THAN_FIRST_NUMBER === $this->compare($amount, Money::zero())) {
+        if (MathServiceInterface::FIRST_NUMBER_IS_LESSER === $this->compare($amount, Money::zero())) {
             throw new AmountInvalid(
                 message: 'Amount must be positive'
             );
@@ -39,7 +39,7 @@ final class ConsistencyService
      */
     public function checkPotential(Wallet $wallet, Money $amount, bool $allowZero = false): void
     {
-        $isZero = fn (Money $amount) => MathServiceInterface::EQUAL_TO_FIRST_NUMBER === $this->compare($amount, Money::zero());
+        $isZero = fn (Money $amount) => MathServiceInterface::THEY_ARE_EQUAL === $this->compare($amount, Money::zero());
 
         if ( ! $isZero($amount) && $isZero($wallet->balance)) {
             throw new BalanceIsEmpty(
@@ -66,7 +66,7 @@ final class ConsistencyService
             return true;
         }
 
-        return $this->compare($balance, $amount) >= MathServiceInterface::EQUAL_TO_FIRST_NUMBER;
+        return $this->compare($balance, $amount) >= MathServiceInterface::THEY_ARE_EQUAL;
     }
 
     /**
