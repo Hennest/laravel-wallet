@@ -46,10 +46,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Hennest\\Wallet\\Providers\\ExchangeRateServiceProvider"
-            ],
-            "aliases": [
-                "Hennest\\Wallet\\Facades\\Wallet"
+                "Hennest\\Wallet\\Providers\\WalletServiceProvider"
             ]
         }
     },
