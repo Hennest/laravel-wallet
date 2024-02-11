@@ -12,7 +12,7 @@ return new class extends Migration {
         Schema::create('wallets', function (Blueprint $table): void {
             $table->ulid('id');
 
-            $table->ulidMorphs('holder');
+            $table->ulidMorphs('owner');
             $table->string('name');
             $table->string('slug')->index();
             $table->string('description')->nullable();
@@ -22,7 +22,7 @@ return new class extends Migration {
 
             $table->timestamps();
 
-            $table->unique(['holder_type', 'holder_id', 'slug']);
+            $table->unique(['owner_type', 'owner_id', 'slug']);
         });
     }
 

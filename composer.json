@@ -23,7 +23,7 @@
     "require": {
         "php": "^8.2",
         "hennest/laravel-math": "0.0.0",
-        "hennest/laravel-money": "0.0.0"
+        "hennest/laravel-money": "^0.0"
     },
     "require-dev": {
         "laravel/pint": "^1.13",

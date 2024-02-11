@@ -15,8 +15,8 @@ final class Wallet extends Model implements WalletInterface
     use HasUlids;
 
     protected $fillable = [
-        'holder_id',
-        'holder_type',
+        'owner_id',
+        'owner_type',
         'name',
         'slug',
         'description',
@@ -36,7 +36,7 @@ final class Wallet extends Model implements WalletInterface
         'decimal_places' => 2,
     ];
 
-    public function holder(): MorphTo
+    public function owner(): MorphTo
     {
         return $this->morphTo();
     }

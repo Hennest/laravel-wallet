@@ -4,74 +4,62 @@ declare(strict_types=1);
 
 namespace Hennest\Wallet\Services;
 
-use Brick\Math\Exception\MathException;
-use Hennest\Money\Money;
 use Hennest\Wallet\DTOs\TransactionDto;
-use Hennest\Wallet\Enums\TransactionType;
 use Hennest\Wallet\Events\TransactionCreatedEvent;
-use Hennest\Wallet\Exceptions\AmountInvalid;
-use Hennest\Wallet\Interfaces\WalletInterface;
+use Hennest\Wallet\Models\Transaction;
 use Hennest\Wallet\Repository\TransactionRepository;
 
 final readonly class TransactionService
 {
     public function __construct(
-        private ConsistencyService $consistencyService,
         private TransactionRepository $transactionRepository,
     ) {
     }
 
-    /**
-     * @throws MathException
-     * @throws AmountInvalid
-     */
-    public function create(
-        WalletInterface $wallet,
-        TransactionType $type,
-        Money $amount,
-        bool $confirmed = true,
-        array|null $meta = [],
-    ): TransactionDto {
-        $this->consistencyService->checkPositive($amount);
+    public function create(TransactionDto $transactionDto): Transaction
+    {
+        $transaction = $this->transactionRepository->insertOne($transactionDto);
 
-        $transaction = new TransactionDto(
-            key: $wallet->getKey(),
-            type: $type,
-            walletId: $wallet->getKey(),
-            payableId: $wallet->holder->getKey(),
-            payableType: $wallet->holder->getMorphClass(),
-            amount: $amount,
-            confirmed: $confirmed,
-            meta: $meta,
-        );
-
-        $this->apply([
-            $transaction,
-        ]);
+        event(new TransactionCreatedEvent(
+            id: $transaction->getKey(),
+            type: $transaction->type,
+            walletId: $transaction->wallet_id,
+        ));
 
         return $transaction;
     }
 
     /**
      * @param array<int|string, TransactionDto> $transactionDtos
-     * @return array<int|string, TransactionDto>
+     * @return array<int|string, Transaction>
      */
-    public function apply(array $transactionDtos): array
+    public function createMany(array $transactionDtos): array
     {
         if (1 === count($transactionDtos)) {
-            $this->transactionRepository->insertOne(reset($transactionDtos));
+            $transactions = [$this->transactionRepository->insertOne(reset($transactionDtos))];
         } else {
             $this->transactionRepository->insert($transactionDtos);
         }
 
-        foreach ($transactionDtos as $object) {
+        $totalAmounts = array_map(function (TransactionDto $transactionDto): array {
+            $amounts = [];
+
+            if ($transactionDto->isConfirmed()) {
+                $amounts[$transactionDto->getWalletId()] = $transactionDto->getAmount();
+            }
+
+            return $amounts;
+        }, $transactionDtos);
+
+        /** @var Transaction[] $transactions */
+        foreach ($transactions as $transaction) {
             event(new TransactionCreatedEvent(
-                id: $object->getKey(),
-                type: $object->getType(),
-                walletId: $object->getWalletId(),
+                id: $transaction->id,
+                type: $transaction->type,
+                walletId: $transaction->wallet_id,
             ));
         }
 
-        return $transactionDtos;
+        return $transactions;
     }
 }

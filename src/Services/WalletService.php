@@ -4,25 +4,36 @@ declare(strict_types=1);
 
 namespace Hennest\Wallet\Services;
 
-final class WalletService
+use Brick\Math\Exception\MathException;
+use Brick\Math\Exception\RoundingNecessaryException;
+use Hennest\Math\Contracts\MathServiceInterface;
+use Hennest\Money\Money;
+use Hennest\Wallet\DTOs\TransactionDto;
+use Hennest\Wallet\Models\Wallet;
+use Hennest\Wallet\Repository\WalletRepository;
+
+final readonly class WalletService
 {
-    public function create(): void
-    {
-
+    public function __construct(
+        private MathServiceInterface $mathService,
+        private WalletRepository $walletRepository,
+    ) {
     }
 
-    public function findById(): void
+    /**
+     * @throws MathException
+     * @throws RoundingNecessaryException
+     */
+    public function updateBalance(Wallet $wallet, TransactionDto $transactionDto): Wallet
     {
+        $adjustedBalance = $this->mathService->add(
+            first: $wallet->balance->format()->asMinorUnit(),
+            second: $transactionDto->getAmount()->format()->asMinorUnit(),
+        );
 
-    }
-
-    public function findBySlug(): void
-    {
-
-    }
-
-    public function findByUuid(): void
-    {
-
+        return $this->walletRepository->updateBalance(
+            wallet: $wallet,
+            balance: new Money((int) $adjustedBalance)
+        );
     }
 }

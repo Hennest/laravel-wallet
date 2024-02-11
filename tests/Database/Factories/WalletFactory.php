@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Hennest\Wallet\Tests\Database\Factories;
 
 use Hennest\Money\Money;
-use Hennest\Wallet\Tests\Database\Models\Wallet;
+use Hennest\Wallet\Models\Wallet;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 final class WalletFactory extends Factory
@@ -15,8 +15,8 @@ final class WalletFactory extends Factory
     public function definition(): array
     {
         return [
-            'holder_id' => fake()->uuid,
-            'holder_type' => fake()->name,
+            'owner_id' => fake()->uuid,
+            'owner_type' => fake()->name,
             'name' => fake()->name,
             'slug' => fake()->slug,
             'balance' => new Money(

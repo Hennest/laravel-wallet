@@ -10,12 +10,13 @@ use Hennest\Money\Money;
 use Hennest\Wallet\Exceptions\AmountInvalid;
 use Hennest\Wallet\Exceptions\BalanceIsEmpty;
 use Hennest\Wallet\Exceptions\InsufficientFund;
-use Hennest\Wallet\Models\Wallet;
+use Hennest\Wallet\Interfaces\WalletInterface;
 
 final class ConsistencyService
 {
     public function __construct(
-        protected MathServiceInterface $mathService
+        protected CastService $castService,
+        protected MathServiceInterface $mathService,
     ) {
     }
 
@@ -37,8 +38,9 @@ final class ConsistencyService
      * @throws InsufficientFund
      * @throws MathException
      */
-    public function checkPotential(Wallet $wallet, Money $amount, bool $allowZero = false): void
+    public function checkPotential(WalletInterface $wallet, Money $amount, bool $allowZero = false): void
     {
+        $wallet = $this->castService->getWallet($wallet);
         $isZero = fn (Money $amount) => MathServiceInterface::THEY_ARE_EQUAL === $this->compare($amount, Money::zero());
 
         if ( ! $isZero($amount) && $isZero($wallet->balance)) {
