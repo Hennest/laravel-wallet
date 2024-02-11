@@ -25,16 +25,34 @@ final readonly class TransactionRepository
     }
 
     /**
-     * @param array<int|string, TransactionDto> $objects
+     * @param array<int|string, TransactionDto> $transactionDtos
+     * @return array<int, int|string>
      */
-    public function insert(array $objects): bool
+    public function insert(array $transactionDtos): array
     {
-        $transactions = [];
+        $dtosToArray = [];
 
-        foreach ($objects as $object) {
-            $transactions[] = $object->toArray();
+        foreach ($transactionDtos as $transactionDto) {
+            $dtosToArray[] = $transactionDto->all();
         }
 
-        return $this->transaction->insert($transactions);
+        $this->transaction->newQuery()->insert($dtosToArray);
+
+        return array_map(
+            fn (TransactionDto $transactionDto): int|string => $transactionDto->getId(),
+            $transactionDtos
+        );
+    }
+
+    /**
+     * @param array<string, int|string> $transactionIds
+     * @return array<int, Transaction>
+     */
+    public function findById(array $transactionIds): array
+    {
+        return $this->transaction->newQuery()
+            ->whereIn('id', $transactionIds)
+            ->get()
+            ->all();
     }
 }

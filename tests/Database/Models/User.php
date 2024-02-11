@@ -6,6 +6,7 @@ namespace Hennest\Wallet\Tests\Database\Models;
 
 use Hennest\Wallet\Interfaces\WalletInterface;
 use Hennest\Wallet\Models\Traits\HasWallet;
+use Hennest\Wallet\Models\Traits\HasWallets;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -20,6 +21,7 @@ final class User extends Model implements WalletInterface
 {
     use HasUlids;
     use HasWallet;
+    use HasWallets;
 
     /**
      * @var string[]

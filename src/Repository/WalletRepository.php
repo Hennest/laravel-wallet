@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Hennest\Wallet\Repository;
 
 use Hennest\Money\Money;
-use Hennest\Wallet\Events\WalletCreatedEvent;
+use Hennest\Wallet\DTOs\TransactionDto;
 use Hennest\Wallet\Models\Wallet;
 
 final readonly class WalletRepository
@@ -45,13 +45,21 @@ final readonly class WalletRepository
     }
 
     /**
-     * @param array<string, Money> $balances
+     * @param array<string, TransactionDto> $transactionDtos
+     * @return array<int, int|string>
      */
-    public function updateBalances(array $balances): int
+    public function updateBalances(array $transactionDtos): array
     {
         $cases = '';
-        foreach ($balances as $walletId => $balance) {
-            $cases .= "WHEN id = $walletId THEN {$balance->format()->asMinorUnit()}";
+        $walletIds = [];
+        foreach ($transactionDtos as $transactionDto) {
+            $walletIds[] = $transactionDto->getWalletId();
+
+            $cases .= sprintf(
+                " WHEN id = '%s' THEN '%s'",
+                $transactionDto->getWalletId(),
+                $transactionDto->getAmount()->format()->asMinorUnit()
+            );
         }
 
         $buildQuery = $this->wallet
@@ -60,18 +68,27 @@ final readonly class WalletRepository
                 value: "CASE $cases END"
             );
 
-        $wallet = $this->wallet->newQuery()
-            ->whereIn($this->wallet->getQualifiedKeyName(), array_keys($balances))
+        $this->wallet->newQuery()
+            ->whereIn($this->wallet->getQualifiedKeyName(), array_values($walletIds))
             ->update([
                 'balance' => $buildQuery
             ]);
 
-        event(new WalletCreatedEvent(
-            id: $this->wallet->id,
-            ownerId: $this->wallet->owner_id,
-            ownerType: $this->wallet->owner_type
-        ));
+        return array_map(
+            fn (TransactionDto $transactionDto): int|string => $transactionDto->getWalletId(),
+            $transactionDtos
+        );
+    }
 
-        return $wallet;
+    /**
+     * @param array<string, int|string> $walletIds
+     * @return Wallet[]
+     */
+    public function findById(array $walletIds): array
+    {
+        return $this->wallet->newQuery()
+            ->whereIn('id', $walletIds)
+            ->get()
+            ->all();
     }
 }

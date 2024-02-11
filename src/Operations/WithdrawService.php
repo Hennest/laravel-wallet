@@ -57,7 +57,7 @@ final readonly class WithdrawService
             transactionDto: $transactionDto
         );
 
-        if ($transactionDto->isConfirmed()) {
+        if ($transactionDto->getConfirmed()) {
             $this->walletService->updateBalance($wallet, $transactionDto);
         }
 

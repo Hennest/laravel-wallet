@@ -38,18 +38,9 @@ final readonly class TransactionService
         if (1 === count($transactionDtos)) {
             $transactions = [$this->transactionRepository->create(reset($transactionDtos))];
         } else {
-            $this->transactionRepository->insert($transactionDtos);
+            $transactionIds = $this->transactionRepository->insert($transactionDtos);
+            $transactions = $this->transactionRepository->findById($transactionIds);
         }
-
-        $totalAmounts = array_map(function (TransactionDto $transactionDto): array {
-            $amounts = [];
-
-            if ($transactionDto->isConfirmed()) {
-                $amounts[$transactionDto->getWalletId()] = $transactionDto->getAmount();
-            }
-
-            return $amounts;
-        }, $transactionDtos);
 
         /** @var Transaction[] $transactions */
         foreach ($transactions as $transaction) {

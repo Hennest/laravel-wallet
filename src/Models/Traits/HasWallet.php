@@ -13,7 +13,9 @@ use Hennest\Wallet\Exceptions\InsufficientFund;
 use Hennest\Wallet\Models\Transaction;
 use Hennest\Wallet\Operations\DepositService;
 use Hennest\Wallet\Operations\WithdrawService;
+use Hennest\Wallet\Services\CastService;
 use Hennest\Wallet\Services\ConsistencyService;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 trait HasWallet
 {
@@ -23,7 +25,7 @@ trait HasWallet
      */
     public function deposit(Money $amount, array|null $meta = [], bool $confirmed = true): Transaction
     {
-        return app(DepositService::class)->handle(
+        return app(DepositService::class)->handleOne(
             wallet: $this,
             amount: $amount,
             confirmed: $confirmed,
@@ -47,6 +49,13 @@ trait HasWallet
             amount: $amount,
             confirmed: $confirmed,
             meta: $meta
+        );
+    }
+
+    public function balance(): Attribute
+    {
+        return new Attribute(
+            get: fn (): Money => app(CastService::class)->getWallet($this)->refresh()->balance
         );
     }
 }

@@ -67,4 +67,26 @@ final readonly class WalletService
 
         return $wallet;
     }
+
+    /**
+     * @param TransactionDto[] $transactionDtos
+     * @return Wallet[]
+     */
+    public function updateBalances(array $transactionDtos): array
+    {
+        $walletIds = $this->walletRepository->updateBalances(
+            transactionDtos: $transactionDtos
+        );
+        $wallets = $this->walletRepository->findById($walletIds);
+
+        foreach ($wallets as $wallet) {
+            event(new WalletCreatedEvent(
+                id: $wallet->getKey(),
+                ownerId: $wallet->owner_id,
+                ownerType: $wallet->owner_type
+            ));
+        }
+
+        return $wallets;
+    }
 }

@@ -43,7 +43,7 @@ final readonly class Wallet
      */
     public function deposit(Money $amount, array|null $meta = [], bool $confirmed = true): Transaction
     {
-        return app(DepositService::class)->handle(
+        return app(DepositService::class)->handleOne(
             wallet: $this->wallet,
             amount: $amount,
             confirmed: $confirmed,
