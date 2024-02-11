@@ -14,6 +14,16 @@ final readonly class TransactionRepository
     ) {
     }
 
+    public function create(TransactionDto $transactionDto): Transaction
+    {
+        $instance = $this
+            ->transaction
+            ->newInstance($transactionDto->toArray());
+        $instance->saveQuietly();
+
+        return $instance;
+    }
+
     /**
      * @param array<int|string, TransactionDto> $objects
      */
@@ -26,15 +36,5 @@ final readonly class TransactionRepository
         }
 
         return $this->transaction->insert($transactions);
-    }
-
-    public function insertOne(TransactionDto $transactionDto): Transaction
-    {
-        $instance = $this
-            ->transaction
-            ->newInstance($transactionDto->toArray());
-        $instance->saveQuietly();
-
-        return $instance;
     }
 }

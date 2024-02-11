@@ -18,7 +18,7 @@ final readonly class TransactionService
 
     public function create(TransactionDto $transactionDto): Transaction
     {
-        $transaction = $this->transactionRepository->insertOne($transactionDto);
+        $transaction = $this->transactionRepository->create($transactionDto);
 
         event(new TransactionCreatedEvent(
             id: $transaction->getKey(),
@@ -36,7 +36,7 @@ final readonly class TransactionService
     public function createMany(array $transactionDtos): array
     {
         if (1 === count($transactionDtos)) {
-            $transactions = [$this->transactionRepository->insertOne(reset($transactionDtos))];
+            $transactions = [$this->transactionRepository->create(reset($transactionDtos))];
         } else {
             $this->transactionRepository->insert($transactionDtos);
         }

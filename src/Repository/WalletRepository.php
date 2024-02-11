@@ -26,28 +26,20 @@ final readonly class WalletRepository
      */
     public function create(array $attributes): Wallet
     {
-        $wallet = $this->wallet->create($attributes);
+        $wallet = $this->wallet->newInstance($attributes);
 
-        event(new WalletCreatedEvent(
-            id: $wallet->id,
-            ownerId: $wallet->owner_id,
-            ownerType: $wallet->owner_type
-        ));
+        $wallet->saveQuietly();
 
         return $wallet;
     }
 
     public function updateBalance(Wallet $wallet, Money $balance): Wallet
     {
-        $wallet->update([
+        $wallet->fill([
             'balance' => $balance
         ]);
 
-        event(new WalletCreatedEvent(
-            id: $wallet->getKey(),
-            ownerId: $wallet->owner_id,
-            ownerType: $wallet->owner_type
-        ));
+        $wallet->saveQuietly();
 
         return $wallet;
     }

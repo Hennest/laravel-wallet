@@ -9,6 +9,7 @@ use Brick\Math\Exception\RoundingNecessaryException;
 use Hennest\Math\Contracts\MathServiceInterface;
 use Hennest\Money\Money;
 use Hennest\Wallet\DTOs\TransactionDto;
+use Hennest\Wallet\Events\WalletCreatedEvent;
 use Hennest\Wallet\Models\Wallet;
 use Hennest\Wallet\Repository\WalletRepository;
 
@@ -18,6 +19,28 @@ final readonly class WalletService
         private MathServiceInterface $mathService,
         private WalletRepository $walletRepository,
     ) {
+    }
+
+    /**
+     * @param array{
+     *     name: string,
+     *     slug?: string,
+     *     description?: string,
+     *     meta?: array<array-key, mixed>|null,
+     *     decimal_places?: positive-int,
+     * } $attributes
+     */
+    public function createWallet(array $attributes): Wallet
+    {
+        $wallet = $this->walletRepository->create($attributes);
+
+        event(new WalletCreatedEvent(
+            id: $wallet->getKey(),
+            ownerId: $wallet->owner_id,
+            ownerType: $wallet->owner_type
+        ));
+
+        return $wallet;
     }
 
     /**
@@ -31,9 +54,17 @@ final readonly class WalletService
             second: $transactionDto->getAmount()->format()->asMinorUnit(),
         );
 
-        return $this->walletRepository->updateBalance(
+        $wallet = $this->walletRepository->updateBalance(
             wallet: $wallet,
             balance: new Money((int) $adjustedBalance)
         );
+
+        event(new WalletCreatedEvent(
+            id: $wallet->getKey(),
+            ownerId: $wallet->owner_id,
+            ownerType: $wallet->owner_type
+        ));
+
+        return $wallet;
     }
 }
