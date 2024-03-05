@@ -6,7 +6,10 @@ namespace Hennest\Wallet\Repository;
 
 use Hennest\Money\Money;
 use Hennest\Wallet\DTOs\TransactionDto;
+use Hennest\Wallet\Interfaces\WalletInterface;
 use Hennest\Wallet\Models\Wallet;
+use Hennest\Wallet\Services\CastService;
+use Illuminate\Database\Eloquent\Collection;
 
 final readonly class WalletRepository
 {
@@ -84,11 +87,52 @@ final readonly class WalletRepository
      * @param array<string, int|string> $walletIds
      * @return Wallet[]
      */
-    public function findById(array $walletIds): array
+    public function findByIds(array $walletIds): array
     {
         return $this->wallet->newQuery()
             ->whereIn('id', $walletIds)
             ->get()
             ->all();
+    }
+
+    public function findBySlug(WalletInterface $owner, string $slug): Wallet|null
+    {
+        $owner = app(CastService::class)->getOwner($owner);
+
+        return $this->findBy([
+            'owner_id' => $owner->getKey(),
+            'owner_type' => $owner->getMorphClass(),
+            'slug' => $slug,
+        ]);
+    }
+
+    /**
+     * @param array{
+     *     id: string,
+     *     owner_id: string,
+     *     owner_type: string,
+     *     slug?: string,
+     * } $attributes
+     */
+    public function findBy(array $attributes): Wallet|null
+    {
+        return $this->wallet->newQuery()
+            ->where($attributes)
+            ->first();
+    }
+
+    /**
+     * @param array<array-key, string> $slugs
+     * @return Collection<int, Wallet>
+     */
+    public function getBySlugs(WalletInterface $owner, array $slugs): Collection
+    {
+        return $this->wallet->newQuery()
+            ->where([
+                'owner_id' => $owner->getKey(),
+                'owner_type' => $owner->getMorphClass(),
+            ])
+            ->whereIn('slug', $slugs)
+            ->get();
     }
 }

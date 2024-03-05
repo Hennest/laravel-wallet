@@ -109,7 +109,9 @@ final readonly class WalletService
         $walletIds = $this->walletRepository->updateBalances(
             transactionDtos: $transactionDtos
         );
-        $wallets = $this->walletRepository->findById($walletIds);
+        $wallets = $this->walletRepository->findByIds(
+            walletIds: $walletIds
+        );
 
         foreach ($wallets as $wallet) {
             event(new BalanceUpdatedEvent(

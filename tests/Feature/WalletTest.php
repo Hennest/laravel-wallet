@@ -57,7 +57,7 @@ test('model can have multiple wallets', function (): void {
         'decimal_places' => 2,
     ]);
 
-    expect($user->wallets()->where('slug', 'my-wallet')->first())
+    expect($user->getWallet('my-wallet'))
         ->name
         ->toEqual('My Wallet')
         ->slug
