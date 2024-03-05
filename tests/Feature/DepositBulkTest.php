@@ -41,7 +41,7 @@ test('wallet can not deposit with less number of amount or wallet', function ():
     expect(fn (): array => app(DepositService::class)->handleMany(
         wallets: [$user1->wallet],
         amounts: [Money::of(10), Money::of(10)]
-    ))->toThrow(InvalidArgumentException::class);
+    ))->toThrow(LengthException::class);
 });
 
 test('wallet can not deposit with empty amount or wallet', function (): void {
