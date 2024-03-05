@@ -12,7 +12,7 @@ final class CastService
 {
     public function getWallet(WalletInterface $wallet): Wallet
     {
-        if ( ! ($wallet instanceof Wallet)) {
+        if ( ! $wallet instanceof Wallet) {
             return $wallet->getAttribute('wallet');
         }
 

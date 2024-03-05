@@ -9,7 +9,9 @@ use Brick\Math\Exception\RoundingNecessaryException;
 use Hennest\Math\Contracts\MathServiceInterface;
 use Hennest\Money\Money;
 use Hennest\Wallet\DTOs\TransactionDto;
+use Hennest\Wallet\Events\BalanceUpdatedEvent;
 use Hennest\Wallet\Events\WalletCreatedEvent;
+use Hennest\Wallet\Interfaces\WalletInterface;
 use Hennest\Wallet\Models\Wallet;
 use Hennest\Wallet\Repository\WalletRepository;
 
@@ -30,9 +32,15 @@ final readonly class WalletService
      *     decimal_places?: positive-int,
      * } $attributes
      */
-    public function createWallet(array $attributes): Wallet
+    public function createWallet(WalletInterface $model, array $attributes): Wallet
     {
-        $wallet = $this->walletRepository->create($attributes);
+        $wallet = $this->walletRepository->create([
+            ...[
+                'owner_id' => $model->getKey(),
+                'owner_type' => $model->getMorphClass(),
+            ],
+            ...$attributes
+        ]);
 
         event(new WalletCreatedEvent(
             id: $wallet->getKey(),
@@ -47,22 +55,46 @@ final readonly class WalletService
      * @throws MathException
      * @throws RoundingNecessaryException
      */
-    public function updateBalance(Wallet $wallet, TransactionDto $transactionDto): Wallet
+    public function increment(Wallet $wallet, Money $amount): Wallet
     {
         $adjustedBalance = $this->mathService->add(
             first: $wallet->balance->format()->asMinorUnit(),
-            second: $transactionDto->getAmount()->format()->asMinorUnit(),
+            second: $amount->format()->asMinorUnit(),
         );
 
+        return $this->updateBalance(
+            wallet: $wallet,
+            amount: new Money((int) $adjustedBalance)
+        );
+    }
+
+    /**
+     * @throws MathException
+     * @throws RoundingNecessaryException
+     */
+    public function decrement(Wallet $wallet, Money $amount): Wallet
+    {
+        $adjustedBalance = $this->mathService->subtract(
+            first: $wallet->balance->format()->asMinorUnit(),
+            second: $amount->absolute()->format()->asMinorUnit(),
+        );
+
+        return $this->updateBalance(
+            wallet: $wallet,
+            amount: new Money((int) $adjustedBalance)
+        );
+    }
+
+    public function updateBalance(Wallet $wallet, Money $amount): Wallet
+    {
         $wallet = $this->walletRepository->updateBalance(
             wallet: $wallet,
-            balance: new Money((int) $adjustedBalance)
+            balance:  $amount
         );
 
-        event(new WalletCreatedEvent(
-            id: $wallet->getKey(),
-            ownerId: $wallet->owner_id,
-            ownerType: $wallet->owner_type
+        event(new BalanceUpdatedEvent(
+            walletId: $wallet->getKey(),
+            balance: $wallet->balance
         ));
 
         return $wallet;
@@ -80,10 +112,9 @@ final readonly class WalletService
         $wallets = $this->walletRepository->findById($walletIds);
 
         foreach ($wallets as $wallet) {
-            event(new WalletCreatedEvent(
-                id: $wallet->getKey(),
-                ownerId: $wallet->owner_id,
-                ownerType: $wallet->owner_type
+            event(new BalanceUpdatedEvent(
+                walletId: $wallet->getKey(),
+                balance: $wallet->balance
             ));
         }
 

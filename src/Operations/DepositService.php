@@ -60,7 +60,10 @@ final readonly class DepositService
         );
 
         if ($transactionDto->getConfirmed()) {
-            $this->walletService->updateBalance($wallet, $transactionDto);
+            $this->walletService->increment(
+                wallet: $wallet,
+                amount: $transactionDto->getAmount()
+            );
         }
 
         return $transaction;

@@ -57,8 +57,12 @@ final readonly class WithdrawService
             transactionDto: $transactionDto
         );
 
+
         if ($transactionDto->getConfirmed()) {
-            $this->walletService->updateBalance($wallet, $transactionDto);
+            $this->walletService->decrement(
+                wallet: $wallet,
+                amount: $transactionDto->getAmount()
+            );
         }
 
         return $transaction;

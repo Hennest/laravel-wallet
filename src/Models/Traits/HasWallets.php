@@ -15,11 +15,20 @@ trait HasWallets
         return $this->morphMany(Wallet::class, 'owner');
     }
 
+    /**
+     * @param array{
+     *     name: string,
+     *     slug?: string,
+     *     description?: string,
+     *     meta?: array<array-key, mixed>|null,
+     *     decimal_places?: positive-int,
+     * } $attributes
+     */
     public function createWallet(array $attributes): Wallet
     {
-        $wallet = app(WalletService::class)->createWallet($attributes);
-        $this->save();
-
-        return $wallet;
+        return app(WalletService::class)->createWallet(
+            model: $this,
+            attributes: $attributes
+        );
     }
 }

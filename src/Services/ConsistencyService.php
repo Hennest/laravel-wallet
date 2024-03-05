@@ -31,6 +31,12 @@ final class ConsistencyService
                 message: 'Amount must be positive'
             );
         }
+
+        if (MathServiceInterface::THEY_ARE_EQUAL === $this->compare($amount, Money::zero())) {
+            throw new AmountInvalid(
+                message: 'Amount cannot be zero'
+            );
+        }
     }
 
     /**
@@ -41,7 +47,9 @@ final class ConsistencyService
     public function checkPotential(WalletInterface $wallet, Money $amount, bool $allowZero = false): void
     {
         $wallet = $this->castService->getWallet($wallet);
-        $isZero = fn (Money $amount) => MathServiceInterface::THEY_ARE_EQUAL === $this->compare($amount, Money::zero());
+        $isZero = fn (
+            Money $amount
+        ): bool => MathServiceInterface::THEY_ARE_EQUAL === $this->compare($amount, Money::zero());
 
         if ( ! $isZero($amount) && $isZero($wallet->balance)) {
             throw new BalanceIsEmpty(

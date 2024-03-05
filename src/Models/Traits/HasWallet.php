@@ -44,6 +44,19 @@ trait HasWallet
     {
         app(ConsistencyService::class)->checkPotential($this->wallet, $amount);
 
+        return $this->forceWithdraw(
+            amount: $amount,
+            meta: $meta,
+            confirmed: $confirmed
+        );
+    }
+
+    /**
+     * @throws MathException
+     * @throws AmountInvalid
+     */
+    public function forceWithdraw(Money $amount, array|null $meta = [], bool $confirmed = true): Transaction
+    {
         return app(WithdrawService::class)->handle(
             wallet: $this,
             amount: $amount,
