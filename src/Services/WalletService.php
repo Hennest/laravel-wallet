@@ -8,7 +8,6 @@ use Brick\Math\Exception\MathException;
 use Brick\Math\Exception\RoundingNecessaryException;
 use Hennest\Math\Contracts\MathServiceInterface;
 use Hennest\Money\Money;
-use Hennest\Wallet\DTOs\TransactionDto;
 use Hennest\Wallet\Events\BalanceUpdatedEvent;
 use Hennest\Wallet\Events\WalletCreatedEvent;
 use Hennest\Wallet\Interfaces\WalletInterface;
@@ -20,6 +19,7 @@ final readonly class WalletService
     public function __construct(
         private MathServiceInterface $mathService,
         private WalletRepository $walletRepository,
+        private ConsistencyService $consistencyService,
     ) {
     }
 
@@ -85,11 +85,73 @@ final readonly class WalletService
         );
     }
 
+    /**
+     * @param array<int, Wallet> $wallets
+     * @param array<int, Money> $amounts
+     * @return Wallet[]
+     * @throws MathException
+     * @throws RoundingNecessaryException
+     */
+    public function incrementMany(array $wallets, array $amounts): array
+    {
+        $this->consistencyService->ensureConsistency(
+            wallets: $wallets,
+            amounts: $amounts
+        );
+
+        $adjustedBalances = array_map(
+            fn (Wallet $wallet, Money $amount): Money => new Money(
+                minorUnit: (int) $this->mathService->add(
+                    first: $wallet->balance->format()->asMinorUnit(),
+                    second: $amount->format()->asMinorUnit(),
+                )
+            ),
+            $wallets,
+            $amounts
+        );
+
+        return $this->updateBalances(
+            wallets: $wallets,
+            amounts: $adjustedBalances
+        );
+    }
+
+    /**
+     * @param array<int, Wallet> $wallets
+     * @param array<int, Money> $amounts
+     * @return Wallet[]
+     * @throws MathException
+     * @throws RoundingNecessaryException
+     */
+    public function decrementMany(array $wallets, array $amounts): array
+    {
+        $this->consistencyService->ensureConsistency(
+            wallets: $wallets,
+            amounts: $amounts
+        );
+
+        $adjustedBalances = array_map(
+            fn (Wallet $wallet, Money $amount): Money => new Money(
+                minorUnit: (int) $this->mathService->subtract(
+                    first: $wallet->balance->format()->asMinorUnit(),
+                    second: $amount->format()->asMinorUnit(),
+                )
+            ),
+            $wallets,
+            $amounts
+        );
+
+        return $this->updateBalances(
+            wallets: $wallets,
+            amounts: $adjustedBalances
+        );
+    }
+
     public function updateBalance(Wallet $wallet, Money $amount): Wallet
     {
         $wallet = $this->walletRepository->updateBalance(
             wallet: $wallet,
-            balance:  $amount
+            amount:  $amount
         );
 
         event(new BalanceUpdatedEvent(
@@ -101,13 +163,20 @@ final readonly class WalletService
     }
 
     /**
-     * @param TransactionDto[] $transactionDtos
+     * @param array<int, Wallet> $wallets
+     * @param array<int, Money> $amounts
      * @return Wallet[]
      */
-    public function updateBalances(array $transactionDtos): array
+    public function updateBalances(array $wallets, array $amounts): array
     {
+        $this->consistencyService->ensureConsistency(
+            wallets: $wallets,
+            amounts: $amounts
+        );
+
         $walletIds = $this->walletRepository->updateBalances(
-            transactionDtos: $transactionDtos
+            wallets: $wallets,
+            amounts: $amounts
         );
         $wallets = $this->walletRepository->findByIds(
             walletIds: $walletIds

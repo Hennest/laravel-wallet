@@ -12,6 +12,7 @@ use Hennest\Wallet\Enums\TransactionType;
 use Hennest\Wallet\Exceptions\AmountInvalid;
 use Hennest\Wallet\Interfaces\WalletInterface;
 use Hennest\Wallet\Models\Transaction;
+use Hennest\Wallet\Models\Wallet;
 use Hennest\Wallet\Services\CastService;
 use Hennest\Wallet\Services\ConsistencyService;
 use Hennest\Wallet\Services\TransactionService;
@@ -66,5 +67,44 @@ final readonly class WithdrawService
         }
 
         return $transaction;
+    }
+
+    /**
+     * @param array<int, Wallet> $wallets
+     * @param array<int, Money> $amounts
+     * @return Transaction[]
+     * @throws MathException
+     * @throws RoundingNecessaryException
+     */
+    public function handleMany(array $wallets, array $amounts): array
+    {
+        $this->consistencyService->ensureConsistency(
+            wallets: $wallets,
+            amounts: $amounts
+        );
+
+        $transactionDtos = array_map(
+            fn (Wallet $wallet, Money $amount): TransactionDto => new TransactionDto(
+                walletId: $this->castService->getWallet($wallet)->getKey(),
+                owner: $this->castService->getOwner($wallet),
+                type: TransactionType::Withdraw,
+                amount: $amount->negate(),
+                confirmed: true,
+                meta: [],
+            ),
+            $wallets,
+            $amounts
+        );
+
+        $transactions = $this->transactionService->createMany(
+            transactionDtos: $transactionDtos
+        );
+
+        $this->walletService->decrementMany(
+            wallets: $wallets,
+            amounts: $amounts
+        );
+
+        return $transactions;
     }
 }

@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace Hennest\Wallet\Repository;
 
 use Hennest\Money\Money;
-use Hennest\Wallet\DTOs\TransactionDto;
 use Hennest\Wallet\Interfaces\WalletInterface;
 use Hennest\Wallet\Models\Wallet;
 use Hennest\Wallet\Services\CastService;
+use Hennest\Wallet\Services\ConsistencyService;
 use Illuminate\Database\Eloquent\Collection;
 
 final readonly class WalletRepository
 {
     public function __construct(
-        private Wallet $wallet
+        private Wallet $wallet,
+        private ConsistencyService $consistencyService,
     ) {
     }
 
@@ -36,10 +37,10 @@ final readonly class WalletRepository
         return $wallet;
     }
 
-    public function updateBalance(Wallet $wallet, Money $balance): Wallet
+    public function updateBalance(Wallet $wallet, Money $amount): Wallet
     {
         $wallet->fill([
-            'balance' => $balance
+            'balance' => $amount
         ]);
 
         $wallet->saveQuietly();
@@ -48,20 +49,27 @@ final readonly class WalletRepository
     }
 
     /**
-     * @param array<string, TransactionDto> $transactionDtos
+     * @param array<int, Wallet> $wallets
+     * @param array<int, Money> $amounts
      * @return array<int, int|string>
      */
-    public function updateBalances(array $transactionDtos): array
+    public function updateBalances(array $wallets, array $amounts): array
     {
+        $this->consistencyService->ensureConsistency(
+            wallets: $wallets,
+            amounts: $amounts
+        );
+
         $cases = '';
         $walletIds = [];
-        foreach ($transactionDtos as $transactionDto) {
-            $walletIds[] = $transactionDto->getWalletId();
+
+        foreach ($wallets as $key => $wallet) {
+            $walletIds[] = $wallet->getKey();
 
             $cases .= sprintf(
                 " WHEN id = '%s' THEN '%s'",
-                $transactionDto->getWalletId(),
-                $transactionDto->getAmount()->format()->asMinorUnit()
+                $wallet->getKey(),
+                $amounts[$key]->format()->asMinorUnit()
             );
         }
 
@@ -78,8 +86,8 @@ final readonly class WalletRepository
             ]);
 
         return array_map(
-            fn (TransactionDto $transactionDto): int|string => $transactionDto->getWalletId(),
-            $transactionDtos
+            fn (Wallet $wallet): int|string => $wallet->getKey(),
+            $wallets
         );
     }
 
@@ -122,7 +130,7 @@ final readonly class WalletRepository
     }
 
     /**
-     * @param array<array-key, string> $slugs
+     * @param string[] $slugs
      * @return Collection<int, Wallet>
      */
     public function getBySlugs(WalletInterface $owner, array $slugs): Collection

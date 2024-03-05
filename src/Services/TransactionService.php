@@ -42,7 +42,6 @@ final readonly class TransactionService
             $transactions = $this->transactionRepository->findById($transactionIds);
         }
 
-        /** @var Transaction[] $transactions */
         foreach ($transactions as $transaction) {
             event(new TransactionCreatedEvent(
                 id: $transaction->id,

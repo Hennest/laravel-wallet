@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 final class TransactionDto implements Arrayable
 {
-    private string|int|null $id = null;
+    private string|int|null $id;
 
     public function __construct(
         private readonly int|string $walletId,

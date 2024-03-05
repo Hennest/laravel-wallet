@@ -17,7 +17,6 @@ use Hennest\Wallet\Services\CastService;
 use Hennest\Wallet\Services\ConsistencyService;
 use Hennest\Wallet\Services\TransactionService;
 use Hennest\Wallet\Services\WalletService;
-use InvalidArgumentException;
 
 final readonly class DepositService
 {
@@ -70,15 +69,18 @@ final readonly class DepositService
     }
 
     /**
-     * @param array<array-key, Wallet> $wallets
-     * @param array<array-key, Money> $amounts
+     * @param array<int, Wallet> $wallets
+     * @param array<int, Money> $amounts
      * @return Transaction[]
+     * @throws MathException
+     * @throws RoundingNecessaryException
      */
     public function handleMany(array $wallets, array $amounts): array
     {
-        if (count($wallets) !== count($amounts)) {
-            throw new InvalidArgumentException('Wallets and amounts must have the same length');
-        }
+        $this->consistencyService->ensureConsistency(
+            wallets: $wallets,
+            amounts: $amounts
+        );
 
         $transactionDtos = array_map(
             function (Wallet $wallet, Money $amount): TransactionDto {
@@ -99,8 +101,9 @@ final readonly class DepositService
             transactionDtos: $transactionDtos
         );
 
-        $this->walletService->updateBalances(
-            transactionDtos: $transactionDtos,
+        $this->walletService->incrementMany(
+            wallets: $wallets,
+            amounts: $amounts
         );
 
         return $transactions;

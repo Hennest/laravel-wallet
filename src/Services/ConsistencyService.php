@@ -11,6 +11,9 @@ use Hennest\Wallet\Exceptions\AmountInvalid;
 use Hennest\Wallet\Exceptions\BalanceIsEmpty;
 use Hennest\Wallet\Exceptions\InsufficientFund;
 use Hennest\Wallet\Interfaces\WalletInterface;
+use Hennest\Wallet\Models\Wallet;
+use InvalidArgumentException;
+use LengthException;
 
 final class ConsistencyService
 {
@@ -77,6 +80,21 @@ final class ConsistencyService
         }
 
         return $this->compare($balance, $amount) >= MathServiceInterface::THEY_ARE_EQUAL;
+    }
+
+    /**
+     * @param array<array-key, Wallet> $wallets
+     * @param array<array-key, Money> $amounts
+     */
+    public function ensureConsistency(array $wallets, array $amounts): void
+    {
+        if (empty($wallets) && empty($amounts)) {
+            throw new InvalidArgumentException('Wallets and amounts must not be empty');
+        }
+
+        if (count($wallets) !== count($amounts)) {
+            throw new LengthException('Wallets and amounts must have the same length');
+        }
     }
 
     /**
