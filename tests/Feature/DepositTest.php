@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Hennest\Money\Money;
 use Hennest\Wallet\Enums\TransactionStatus;
+use Hennest\Wallet\Enums\TransactionType;
 use Hennest\Wallet\Exceptions\AmountInvalid;
 use Hennest\Wallet\Models\Transaction;
 use Hennest\Wallet\Tests\Database\Factories\UserFactory;
@@ -24,6 +25,9 @@ test('wallet can deposit', function (): void {
     expect($user->wallet->balance)->toEqual(Money::of(50));
 
     $this->assertDatabaseCount('transactions', 3);
+    $this->assertDatabaseHas('transactions', [
+        'type' => TransactionType::Deposit,
+    ]);
     $this->assertDatabaseHas('wallets', [
         'balance' => 50,
     ]);

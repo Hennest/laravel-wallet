@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Hennest\Money\Money;
+use Hennest\Wallet\Enums\TransactionType;
 use Hennest\Wallet\Models\Transaction;
 use Hennest\Wallet\Operations\WithdrawService;
 use Hennest\Wallet\Tests\Database\Factories\UserFactory;
@@ -19,8 +20,11 @@ test('wallet can withdraw in bulk', function (): void {
         amounts: [Money::of(10), Money::of(10)]
     );
 
-    $this->assertDatabaseCount('wallets', 2);
     $this->assertDatabaseCount('transactions', 2);
+    $this->assertDatabaseHas('transactions', [
+        'type' => TransactionType::Withdraw,
+    ]);
+    $this->assertDatabaseCount('wallets', 2);
     $this->assertDatabaseHas('wallets', [
         'balance' => -8,
     ]);

@@ -17,10 +17,10 @@ final class Transaction extends Model
 
     protected $fillable = [
         'id',
-        'type',
-        'wallet_id',
         'payable_id',
         'payable_type',
+        'wallet_id',
+        'type',
         'amount',
         'status',
         'meta',

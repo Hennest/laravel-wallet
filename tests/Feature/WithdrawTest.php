@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Hennest\Money\Money;
+use Hennest\Wallet\Enums\TransactionType;
 use Hennest\Wallet\Exceptions\AmountInvalid;
 use Hennest\Wallet\Exceptions\BalanceIsEmpty;
 use Hennest\Wallet\Exceptions\InsufficientFund;
@@ -25,6 +26,9 @@ test('wallet can withdraw ', function (): void {
     expect($user->wallet->balance)->toEqual(Money::of(0));
 
     $this->assertDatabaseCount('transactions', 3);
+    $this->assertDatabaseHas('transactions', [
+        'type' => TransactionType::Withdraw,
+    ]);
     $this->assertDatabaseHas('wallets', [
         'balance' => 0,
     ]);

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Hennest\Wallet\Enums;
 
-interface HasType
+use BackedEnum;
+
+interface HasType extends BackedEnum
 {
 }

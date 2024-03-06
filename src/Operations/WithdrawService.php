@@ -50,7 +50,7 @@ final readonly class WithdrawService
         $transaction = $this->transactionService->makeOne(
             owner: $owner,
             amount: $amount->negate(),
-            type: TransactionType::Deposit,
+            type: TransactionType::Withdraw,
             status: $status,
             meta: $meta
         );
