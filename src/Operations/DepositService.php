@@ -7,13 +7,13 @@ namespace Hennest\Wallet\Operations;
 use Brick\Math\Exception\MathException;
 use Brick\Math\Exception\RoundingNecessaryException;
 use Hennest\Money\Money;
+use Hennest\Wallet\Assemblers\TransactionAssembler;
 use Hennest\Wallet\DTOs\TransactionDto;
 use Hennest\Wallet\Enums\TransactionType;
 use Hennest\Wallet\Exceptions\AmountInvalid;
 use Hennest\Wallet\Interfaces\WalletInterface;
 use Hennest\Wallet\Models\Transaction;
 use Hennest\Wallet\Models\Wallet;
-use Hennest\Wallet\Services\CastService;
 use Hennest\Wallet\Services\ConsistencyService;
 use Hennest\Wallet\Services\TransactionService;
 use Hennest\Wallet\Services\WalletService;
@@ -21,10 +21,10 @@ use Hennest\Wallet\Services\WalletService;
 final readonly class DepositService
 {
     public function __construct(
-        private CastService $castService,
         private ConsistencyService $consistencyService,
         private TransactionService $transactionService,
         private WalletService $walletService,
+        private TransactionAssembler $transactionAssembler,
     ) {
     }
 
@@ -34,36 +34,23 @@ final readonly class DepositService
      * @throws AmountInvalid
      */
     public function handleOne(
-        WalletInterface $wallet,
+        WalletInterface $owner,
         Money $amount,
-        bool $confirmed = true,
+        bool $confirmed,
         array|null $meta = [],
     ): Transaction {
-        $this->consistencyService->ensurePositive(
+        $transaction = $this->transactionService->makeOne(
+            owner: $owner,
+            amount: $amount,
+            type: TransactionType::Deposit,
+            confirmed: $confirmed,
+            meta: $meta
+        );
+
+        $transaction->confirmed && $this->walletService->increment(
+            wallet: $owner->wallet,
             amount: $amount
         );
-
-        $wallet = $this->castService->getWallet($wallet);
-
-        $transactionDto = new TransactionDto(
-            walletId: $wallet->getKey(),
-            owner: $this->castService->getOwner($wallet),
-            type: TransactionType::Deposit,
-            amount: $amount,
-            confirmed: $confirmed,
-            meta: $meta,
-        );
-
-        $transaction = $this->transactionService->create(
-            transactionDto: $transactionDto
-        );
-
-        if ($transactionDto->getConfirmed()) {
-            $this->walletService->increment(
-                wallet: $wallet,
-                amount: $transactionDto->getAmount()
-            );
-        }
 
         return $transaction;
     }
@@ -84,13 +71,12 @@ final readonly class DepositService
 
         $transactionDtos = array_map(
             function (Wallet $wallet, Money $amount): TransactionDto {
-                return new TransactionDto(
-                    walletId: $this->castService->getWallet($wallet)->getKey(),
-                    owner: $this->castService->getOwner($wallet),
-                    type: TransactionType::Deposit,
+                return $this->transactionAssembler->create(
+                    owner: $wallet,
                     amount: $amount,
+                    type: TransactionType::Deposit,
                     confirmed: true,
-                    meta: [],
+                    meta: []
                 );
             },
             $wallets,

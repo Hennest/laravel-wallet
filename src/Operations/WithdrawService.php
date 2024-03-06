@@ -7,7 +7,10 @@ namespace Hennest\Wallet\Operations;
 use Brick\Math\Exception\MathException;
 use Brick\Math\Exception\RoundingNecessaryException;
 use Hennest\Money\Money;
+use Hennest\Wallet\Assemblers\TransactionAssembler;
 use Hennest\Wallet\DTOs\TransactionDto;
+use Hennest\Wallet\Enums\Confirmable;
+use Hennest\Wallet\Enums\TransactionStatus;
 use Hennest\Wallet\Enums\TransactionType;
 use Hennest\Wallet\Exceptions\AmountInvalid;
 use Hennest\Wallet\Interfaces\WalletInterface;
@@ -23,6 +26,7 @@ final readonly class WithdrawService
     public function __construct(
         private CastService $castService,
         private ConsistencyService $consistencyService,
+        private TransactionAssembler $transactionAssembler,
         private TransactionService $transactionService,
         private WalletService $walletService,
     ) {
@@ -33,38 +37,28 @@ final readonly class WithdrawService
      * @throws RoundingNecessaryException
      * @throws AmountInvalid
      */
-    public function handle(
-        WalletInterface $wallet,
+    public function handleOne(
+        WalletInterface $owner,
         Money $amount,
-        bool $confirmed = true,
+        Confirmable $status,
         array|null $meta = [],
     ): Transaction {
         $this->consistencyService->ensurePositive(
             amount: $amount
         );
 
-        $wallet = $this->castService->getWallet($wallet);
-
-        $transactionDto = new TransactionDto(
-            walletId: $wallet->getKey(),
-            owner: $this->castService->getOwner($wallet),
-            type: TransactionType::Withdraw,
+        $transaction = $this->transactionService->makeOne(
+            owner: $owner,
             amount: $amount->negate(),
-            confirmed: $confirmed,
-            meta: $meta,
+            type: TransactionType::Deposit,
+            status: $status,
+            meta: $meta
         );
 
-        $transaction = $this->transactionService->create(
-            transactionDto: $transactionDto
+        $status->isConfirmed() && $this->walletService->decrement(
+            wallet: $this->castService->getWallet($owner),
+            amount: $amount
         );
-
-
-        if ($transactionDto->getConfirmed()) {
-            $this->walletService->decrement(
-                wallet: $wallet,
-                amount: $transactionDto->getAmount()
-            );
-        }
 
         return $transaction;
     }
@@ -84,14 +78,16 @@ final readonly class WithdrawService
         );
 
         $transactionDtos = array_map(
-            fn (Wallet $wallet, Money $amount): TransactionDto => new TransactionDto(
-                walletId: $this->castService->getWallet($wallet)->getKey(),
-                owner: $this->castService->getOwner($wallet),
-                type: TransactionType::Withdraw,
-                amount: $amount->negate(),
-                confirmed: true,
-                meta: [],
-            ),
+            function (Wallet $wallet, Money $amount): TransactionDto {
+                return $this->transactionAssembler->create(
+                    walletId: $this->castService->getWallet($wallet)->getKey(),
+                    owner: $this->castService->getWallet($wallet),
+                    amount: $amount->negate(),
+                    type: TransactionType::Withdraw,
+                    status: TransactionStatus::Confirmed,
+                    meta: []
+                );
+            },
             $wallets,
             $amounts
         );

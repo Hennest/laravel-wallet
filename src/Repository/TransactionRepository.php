@@ -44,6 +44,17 @@ final readonly class TransactionRepository
         );
     }
 
+    public function confirm(Transaction $transaction): Transaction
+    {
+        $transaction->fill([
+            'confirmed' => true
+        ]);
+
+        $transaction->saveQuietly();
+
+        return $transaction;
+    }
+
     /**
      * @param array<string, int|string> $transactionIds
      * @return array<int, Transaction>

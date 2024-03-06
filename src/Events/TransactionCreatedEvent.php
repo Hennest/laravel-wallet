@@ -12,6 +12,7 @@ final readonly class TransactionCreatedEvent
         private int|string $id,
         private TransactionType $type,
         private int|string $walletId,
+        private bool $confirmed = false,
     ) {
     }
 
@@ -28,5 +29,10 @@ final readonly class TransactionCreatedEvent
     public function getWalletId(): int|string
     {
         return $this->walletId;
+    }
+
+    public function getConfirmed(): bool
+    {
+        return $this->confirmed;
     }
 }

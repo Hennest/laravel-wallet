@@ -6,6 +6,7 @@ namespace Hennest\Wallet\DTOs;
 
 use Hennest\Money\Money;
 use Hennest\Wallet\Enums\TransactionType;
+use Hennest\Wallet\Interfaces\WalletInterface;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -16,11 +17,11 @@ final class TransactionDto implements Arrayable
 
     public function __construct(
         private readonly int|string $walletId,
-        private readonly Model $owner,
+        private readonly WalletInterface|Model $owner,
         private readonly TransactionType $type,
         private readonly Money $amount,
-        private readonly bool $confirmed,
-        private readonly array|null $meta,
+        private readonly bool $confirmed = false,
+        private readonly array|null $meta = [],
     ) {
         $this->id = (string) Str::ulid();
     }
@@ -30,7 +31,7 @@ final class TransactionDto implements Arrayable
         return $this->walletId;
     }
 
-    public function getOwner(): Model
+    public function getOwner(): WalletInterface|Model
     {
         return $this->owner;
     }

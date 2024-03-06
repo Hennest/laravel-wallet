@@ -30,6 +30,23 @@ test('wallet can deposit', function (): void {
     expect(Transaction::query()->sum('amount'))->toEqual(50);
 });
 
+test('wallet is not funded when confirmed is false', function (): void {
+    $user = UserFactory::new()
+        ->has(WalletFactory::new(['balance' => Money::zero()]))
+        ->create();
+
+    $user->deposit(Money::of(10), confirmed: false);
+
+    expect($user->wallet->balance)->toEqual(Money::zero());
+
+    $this->assertDatabaseCount('transactions', 1);
+    $this->assertDatabaseHas('wallets', [
+        'balance' => 0,
+    ]);
+
+    expect(Transaction::query()->sum('amount'))->toEqual(10);
+});
+
 test('wallet can not deposit with zero amount', function (): void {
     $user = UserFactory::new()
         ->has(WalletFactory::new(['balance' => Money::zero()]))

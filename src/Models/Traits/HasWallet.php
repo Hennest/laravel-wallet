@@ -26,7 +26,7 @@ trait HasWallet
     public function deposit(Money $amount, array|null $meta = [], bool $confirmed = true): Transaction
     {
         return app(DepositService::class)->handleOne(
-            wallet: $this,
+            owner: $this,
             amount: $amount,
             confirmed: $confirmed,
             meta: $meta
