@@ -7,6 +7,8 @@ namespace Hennest\Wallet\Models\Traits;
 use Brick\Math\Exception\MathException;
 use Brick\Math\Exception\RoundingNecessaryException;
 use Hennest\Money\Money;
+use Hennest\Wallet\Enums\Confirmable;
+use Hennest\Wallet\Enums\TransactionStatus;
 use Hennest\Wallet\Exceptions\AmountInvalid;
 use Hennest\Wallet\Exceptions\BalanceIsEmpty;
 use Hennest\Wallet\Exceptions\InsufficientFund;
@@ -23,12 +25,12 @@ trait HasWallet
      * @throws MathException
      * @throws AmountInvalid
      */
-    public function deposit(Money $amount, array|null $meta = [], bool $confirmed = true): Transaction
+    public function deposit(Money $amount, array|null $meta = [], Confirmable $status = TransactionStatus::Confirmed): Transaction
     {
         return app(DepositService::class)->handleOne(
             owner: $this,
             amount: $amount,
-            confirmed: $confirmed,
+            status: $status,
             meta: $meta
         );
     }
@@ -40,14 +42,14 @@ trait HasWallet
      * @throws BalanceIsEmpty
      * @throws InsufficientFund
      */
-    public function withdraw(Money $amount, array|null $meta = [], bool $confirmed = true): Transaction
+    public function withdraw(Money $amount, array|null $meta = [], Confirmable $status = TransactionStatus::Confirmed): Transaction
     {
         app(ConsistencyService::class)->ensureSufficientBalance($this->wallet, $amount);
 
         return $this->forceWithdraw(
             amount: $amount,
             meta: $meta,
-            confirmed: $confirmed
+            status: $status
         );
     }
 
@@ -55,12 +57,12 @@ trait HasWallet
      * @throws MathException
      * @throws AmountInvalid
      */
-    public function forceWithdraw(Money $amount, array|null $meta = [], bool $confirmed = true): Transaction
+    public function forceWithdraw(Money $amount, array|null $meta = [], Confirmable $status = TransactionStatus::Confirmed): Transaction
     {
-        return app(WithdrawService::class)->handle(
-            wallet: $this,
+        return app(WithdrawService::class)->handleOne(
+            owner: $this,
             amount: $amount,
-            confirmed: $confirmed,
+            status: $status,
             meta: $meta
         );
     }

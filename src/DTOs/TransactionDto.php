@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Hennest\Wallet\DTOs;
 
 use Hennest\Money\Money;
+use Hennest\Wallet\Enums\Confirmable;
+use Hennest\Wallet\Enums\HasType;
 use Hennest\Wallet\Enums\TransactionType;
 use Hennest\Wallet\Interfaces\WalletInterface;
 use Illuminate\Contracts\Support\Arrayable;
@@ -18,9 +20,9 @@ final class TransactionDto implements Arrayable
     public function __construct(
         private readonly int|string $walletId,
         private readonly WalletInterface|Model $owner,
-        private readonly TransactionType $type,
+        private readonly HasType $type,
         private readonly Money $amount,
-        private readonly bool $confirmed = false,
+        private readonly Confirmable $status,
         private readonly array|null $meta = [],
     ) {
         $this->id = (string) Str::ulid();
@@ -46,9 +48,9 @@ final class TransactionDto implements Arrayable
         return $this->amount;
     }
 
-    public function getConfirmed(): bool
+    public function getStatus(): Confirmable
     {
-        return $this->confirmed;
+        return $this->status;
     }
 
     public function getMeta(): array|null
@@ -70,7 +72,7 @@ final class TransactionDto implements Arrayable
             'payable_type' => $this->owner->getMorphClass(),
             'type' => $this->type,
             'amount' => $this->amount,
-            'confirmed' => $this->confirmed,
+            'status' => $this->status,
             // TODO: 'meta' => $this->meta,
         ];
     }
@@ -84,7 +86,7 @@ final class TransactionDto implements Arrayable
             'payable_type' => $this->owner->getMorphClass(),
             'type' => $this->type->value,
             'amount' => $this->amount->format()->asMinorUnit(),
-            'confirmed' => $this->confirmed,
+            'status' => $this->status,
             // TODO: 'meta' => $this->meta,
         ];
     }

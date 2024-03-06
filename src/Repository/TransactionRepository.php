@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Hennest\Wallet\Repository;
 
 use Hennest\Wallet\DTOs\TransactionDto;
+use Hennest\Wallet\Enums\TransactionStatus;
 use Hennest\Wallet\Models\Transaction;
 
 final readonly class TransactionRepository
@@ -47,7 +48,7 @@ final readonly class TransactionRepository
     public function confirm(Transaction $transaction): Transaction
     {
         $transaction->fill([
-            'confirmed' => true
+            'status' => TransactionStatus::Confirmed
         ]);
 
         $transaction->saveQuietly();

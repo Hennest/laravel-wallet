@@ -19,7 +19,7 @@ final class CastService
         return $wallet;
     }
 
-    public function getOwner(Model|WalletInterface $wallet): Model
+    public function getOwner(Model|WalletInterface $wallet): Model|WalletInterface
     {
         return $wallet instanceof Wallet
             ? $wallet->getAttribute('owner')

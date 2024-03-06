@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Hennest\Wallet\Enums;
 
-enum TransactionType: string
+enum TransactionType: string implements HasType
 {
     case Deposit = 'deposit';
 

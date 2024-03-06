@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Hennest\Money\Money;
+use Hennest\Wallet\Enums\TransactionStatus;
 use Hennest\Wallet\Exceptions\AmountInvalid;
 use Hennest\Wallet\Models\Transaction;
 use Hennest\Wallet\Tests\Database\Factories\UserFactory;
@@ -35,7 +36,7 @@ test('wallet is not funded when confirmed is false', function (): void {
         ->has(WalletFactory::new(['balance' => Money::zero()]))
         ->create();
 
-    $user->deposit(Money::of(10), confirmed: false);
+    $user->deposit(Money::of(10), status: TransactionStatus::Pending);
 
     expect($user->wallet->balance)->toEqual(Money::zero());
 

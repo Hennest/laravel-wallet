@@ -7,7 +7,7 @@ namespace Hennest\Wallet\Events;
 use Hennest\Wallet\Enums\Confirmable;
 use Hennest\Wallet\Enums\TransactionType;
 
-final readonly class TransactionCreatedEvent
+final readonly class TransactionConfirmedEvent
 {
     public function __construct(
         private int|string $id,

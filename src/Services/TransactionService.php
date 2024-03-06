@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Hennest\Wallet\Services;
 
-use Brick\Math\Exception\MathException;
 use Hennest\Money\Money;
 use Hennest\Wallet\Assemblers\TransactionAssembler;
 use Hennest\Wallet\DTOs\TransactionDto;
-use Hennest\Wallet\Enums\TransactionType;
+use Hennest\Wallet\Enums\Confirmable;
+use Hennest\Wallet\Enums\HasType;
+use Hennest\Wallet\Events\TransactionConfirmedEvent;
 use Hennest\Wallet\Events\TransactionCreatedEvent;
-use Hennest\Wallet\Exceptions\AmountInvalid;
 use Hennest\Wallet\Interfaces\WalletInterface;
 use Hennest\Wallet\Models\Transaction;
 use Hennest\Wallet\Repository\TransactionRepository;
@@ -18,32 +18,25 @@ use Hennest\Wallet\Repository\TransactionRepository;
 final readonly class TransactionService
 {
     public function __construct(
-        private ConsistencyService $consistencyService,
+        private CastService $castService,
         private TransactionRepository $transactionRepository,
         private TransactionAssembler $transactionAssembler,
     ) {
     }
 
-    /**
-     * @throws MathException
-     * @throws AmountInvalid
-     */
     public function makeOne(
         WalletInterface $owner,
         Money $amount,
-        TransactionType $type,
-        bool $confirmed = true,
+        HasType $type,
+        Confirmable $status,
         array|null $meta = []
     ): Transaction {
-        $this->consistencyService->ensurePositive(
-            amount: $amount
-        );
-
         $transactionDto = $this->transactionAssembler->create(
-            owner: $owner,
+            walletId: $this->castService->getWallet($owner)->getKey(),
+            owner: $this->castService->getOwner($owner),
             amount: $amount,
             type: $type,
-            confirmed: $confirmed,
+            status: $status,
             meta: $meta
         );
 
@@ -60,7 +53,7 @@ final readonly class TransactionService
             id: $transaction->getKey(),
             type: $transaction->type,
             walletId: $transaction->wallet_id,
-            confirmed: $transaction->confirmed
+            status: $transaction->status
         ));
 
         return $transaction;
@@ -84,9 +77,28 @@ final readonly class TransactionService
                 id: $transaction->id,
                 type: $transaction->type,
                 walletId: $transaction->wallet_id,
+                status: $transaction->status
             ));
         }
 
         return $transactions;
+    }
+
+    public function confirm(Transaction $transaction): Transaction
+    {
+        if ($transaction->status->isConfirmed()) {
+            return $transaction;
+        }
+
+        $transaction = $this->transactionRepository->confirm($transaction);
+
+        event(new TransactionConfirmedEvent(
+            id: $transaction->getKey(),
+            type: $transaction->type,
+            walletId: $transaction->wallet_id,
+            status: $transaction->status,
+        ));
+
+        return $transaction;
     }
 }
