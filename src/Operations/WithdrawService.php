@@ -39,7 +39,7 @@ final readonly class WithdrawService
         bool $confirmed = true,
         array|null $meta = [],
     ): Transaction {
-        $this->consistencyService->checkPositive(
+        $this->consistencyService->ensurePositive(
             amount: $amount
         );
 
@@ -78,7 +78,7 @@ final readonly class WithdrawService
      */
     public function handleMany(array $wallets, array $amounts): array
     {
-        $this->consistencyService->ensureConsistency(
+        $this->consistencyService->ensureIntegrity(
             wallets: $wallets,
             amounts: $amounts
         );

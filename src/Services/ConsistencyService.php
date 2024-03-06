@@ -27,7 +27,7 @@ final class ConsistencyService
      * @throws AmountInvalid
      * @throws MathException
      */
-    public function checkPositive(Money $amount): void
+    public function ensurePositive(Money $amount): void
     {
         if (MathServiceInterface::FIRST_NUMBER_IS_LESSER === $this->compare($amount, Money::zero())) {
             throw new AmountInvalid(
@@ -47,7 +47,7 @@ final class ConsistencyService
      * @throws InsufficientFund
      * @throws MathException
      */
-    public function checkPotential(WalletInterface $wallet, Money $amount, bool $allowZero = false): void
+    public function ensureSufficientBalance(WalletInterface $wallet, Money $amount, bool $allowZero = false): void
     {
         $wallet = $this->castService->getWallet($wallet);
         $isZero = fn (
@@ -86,7 +86,7 @@ final class ConsistencyService
      * @param array<array-key, Wallet> $wallets
      * @param array<array-key, Money> $amounts
      */
-    public function ensureConsistency(array $wallets, array $amounts): void
+    public function ensureIntegrity(array $wallets, array $amounts): void
     {
         if (empty($wallets) && empty($amounts)) {
             throw new InvalidArgumentException('Wallets and amounts must not be empty');

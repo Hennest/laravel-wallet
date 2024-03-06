@@ -55,7 +55,7 @@ final readonly class WalletRepository
      */
     public function updateBalances(array $wallets, array $amounts): array
     {
-        $this->consistencyService->ensureConsistency(
+        $this->consistencyService->ensureIntegrity(
             wallets: $wallets,
             amounts: $amounts
         );
