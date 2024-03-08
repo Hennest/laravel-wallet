@@ -22,25 +22,39 @@
     },
     "require": {
         "php": "^8.2",
-        "hennest/laravel-math": "0.0.0",
+        "hennest/laravel-math": "^0.0",
         "hennest/laravel-money": "^0.0"
     },
     "require-dev": {
         "laravel/pint": "^1.13",
         "orchestra/testbench": "^8.14",
         "pestphp/pest": "^2.24",
+        "pestphp/pest-plugin-type-coverage": "^2.8",
         "phpstan/phpstan": "^1.10"
     },
     "scripts": {
         "stan": [
-            "./vendor/bin/phpstan analyse"
+            "./vendor/bin/phpstan analyse --memory-limit=2g"
         ],
-        "pest": [
+        "test": [
             "./vendor/bin/pest"
+        ],
+        "types": [
+            "./vendor/bin/pest --type-coverage"
+        ],
+        "coverage": [
+            "./vendor/bin/pest --coverage"
         ],
         "pint": [
             "./vendor/bin/pint"
         ]
+    },
+    "scripts-descriptions": {
+        "stan": "Run the PHPStan static analysis tool.",
+        "test": "Run the Pest PHP test suite.",
+        "types": "Run the pest PHP Type Coverage test plugin.",
+        "coverage": "Run the pest PHP test Coverage.",
+        "pint": "Run the Laravel Pint code style tool."
     },
     "extra": {
         "laravel": {

@@ -29,13 +29,13 @@ final class ConsistencyService
      */
     public function ensurePositive(Money $amount): void
     {
-        if (MathServiceInterface::FIRST_NUMBER_IS_LESSER === $this->compare($amount, Money::zero())) {
+        if ($this->mathService->lessThan($amount->format()->asMinorUnit(), 0)) {
             throw new AmountInvalid(
                 message: 'Amount must be positive'
             );
         }
 
-        if (MathServiceInterface::THEY_ARE_EQUAL === $this->compare($amount, Money::zero())) {
+        if ($this->mathService->equals($amount->format()->asMinorUnit(), 0)) {
             throw new AmountInvalid(
                 message: 'Amount cannot be zero'
             );
@@ -47,12 +47,13 @@ final class ConsistencyService
      * @throws InsufficientFund
      * @throws MathException
      */
-    public function ensureSufficientBalance(WalletInterface $wallet, Money $amount, bool $allowZero = false): void
+    public function ensureSufficientBalance(WalletInterface $wallet, Money $amount): void
     {
         $wallet = $this->castService->getWallet($wallet);
-        $isZero = fn (
-            Money $amount
-        ): bool => MathServiceInterface::THEY_ARE_EQUAL === $this->compare($amount, Money::zero());
+        $isZero = fn (Money $amount): bool => $this->mathService->equals(
+            first: $amount->format()->asMinorUnit(),
+            second: Money::zero()->format()->asMinorUnit()
+        );
 
         if ( ! $isZero($amount) && $isZero($wallet->balance)) {
             throw new BalanceIsEmpty(
@@ -60,7 +61,7 @@ final class ConsistencyService
             );
         }
 
-        if ( ! $this->canWithdraw($wallet->balance, $amount, $allowZero)) {
+        if ( ! $this->canWithdraw($wallet->balance, $amount)) {
             throw new InsufficientFund(
                 message: 'Insufficient funds'
             );
@@ -70,16 +71,12 @@ final class ConsistencyService
     /**
      * @throws MathException
      */
-    public function canWithdraw(Money $balance, Money $amount, bool $allowZero = false): bool
+    public function canWithdraw(Money $balance, Money $amount): bool
     {
-        /**
-         * Allow withdrawal with a negative balance.
-         */
-        if ($allowZero && ! $this->compare($amount, Money::zero())) {
-            return true;
-        }
-
-        return $this->compare($balance, $amount) >= MathServiceInterface::THEY_ARE_EQUAL;
+        return $this->mathService->greaterThanOrEqual(
+            first: $balance->format()->asMinorUnit(),
+            second: $amount->format()->asMinorUnit()
+        );
     }
 
     /**
@@ -95,16 +92,5 @@ final class ConsistencyService
         if (count($wallets) !== count($amounts)) {
             throw new LengthException('Wallets and amounts must have the same length');
         }
-    }
-
-    /**
-     * @throws MathException
-     */
-    private function compare(Money $firstMoney, Money $secondMoney): int
-    {
-        return $this->mathService->compare(
-            first: $firstMoney->format()->asMinorUnit(),
-            second: $secondMoney->format()->asMinorUnit()
-        );
     }
 }
